@@ -1,0 +1,41 @@
+{
+    "rice": {
+        "description": "Rice is the seed of the grass species Oryza sativa.",
+        "growing_conditions": "Requires warm climate, heavy rainfall, humidity.",
+        "nutritional_value": "Good source of carbohydrates, provides some protein.",
+        "typical_yield": "4-6 tons per hectare",
+        "major_producers": [
+            "China",
+            "India",
+            "Indonesia",
+            "Bangladesh",
+            "Vietnam"
+        ]
+    },
+    "wheat": {
+        "description": "Wheat is a grass widely cultivated for its seed.",
+        "growing_conditions": "Thrives in well-drained loamy soil.",
+        "nutritional_value": "Rich in carbohydrates, with moderate protein.",
+        "typical_yield": "3-4 tons per hectare",
+        "major_producers": [
+            "China",
+            "India",
+            "Russia",
+            "United States",
+            "France"
+        ]
+    },
+    "maize": {
+        "description": "Maize, also known as corn, is a cereal grain.",
+        "growing_conditions": "Requires warm weather and plenty of sunshine.",
+        "nutritional_value": "High in carbohydrates, provides some protein.",
+        "typical_yield": "5-8 tons per hectare",
+        "major_producers": [
+            "United States",
+            "China",
+            "Brazil",
+            "Argentina",
+            "Mexico"
+        ]
+    }
+}
