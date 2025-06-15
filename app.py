@@ -495,7 +495,7 @@ def render_home():
         # Add the last model update to the activities
         activities.insert(0, {
             "activity": f"Model accuracy updated to {metrics.get('avg_accuracy')}%", 
-            "timestamp": metrics.get('last_updated'), 
+            "timestamp": str(metrics.get('last_updated')), 
             "type": "Performance Update"
         })
     

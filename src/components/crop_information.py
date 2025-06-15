@@ -1,3 +1,5 @@
+# importing libraries
+# importing part 
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -524,8 +526,8 @@ def render_crop_predictor():
                 
                 with col2:
                     st.write("### Top Recommendations")
-                    for i, row in results_df.iterrows():
-                        st.write(f"**{i+1}. {row['Crop'].capitalize()}** ({row['Suitability Score']:.1f}%)")
+                    for idx, row in enumerate(results_df.itertuples(index=False), 1):
+                        st.write(f"**{idx}. {getattr(row, 'Crop').capitalize()}** ({getattr(row, 'Suitability Score'):.1f}%)")
                 
                 # Display detailed information for the top recommended crop
                 st.write("### Details about the top recommended crop:")
@@ -591,8 +593,8 @@ def sample_recommendations():
     
     with col2:
         st.write("### Top Recommendations")
-        for i, row in results_df.iterrows():
-            st.write(f"**{i+1}. {row['Crop'].capitalize()}** ({row['Suitability Score']:.1f}%)")
+        for idx, row in enumerate(results_df.itertuples(index=False), 1):
+            st.write(f"**{idx}. {getattr(row, 'Crop').capitalize()}** ({getattr(row, 'Suitability Score'):.1f}%)")
     
     # Display detailed information for the top recommended crop
     st.write("### Details about the top recommended crop:")
