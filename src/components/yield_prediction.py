@@ -12,6 +12,7 @@ import pickle
 from src.data import data_loader
 from src.models import model_trainer
 from src.visualizations import plots
+from src.utils.reporting import get_csv_download, get_pdf_download
 
 def render_yield_prediction():
     """Render the yield prediction page"""
@@ -361,6 +362,10 @@ def render_advanced_yield_prediction():
             # Display summary table
             st.write("### Summary Report")
             st.table(summary_data)
+
+            if 'results_df' in locals() or 'results_df' in globals():
+                get_csv_download(summary_data, filename="yield_prediction.csv")
+                get_pdf_download(summary_data.to_string(index=False), filename="yield_prediction.pdf")
 
 def simulate_yield_prediction(crop_type, area, temperature, rainfall, soil_quality, fertilizer, irrigation, pest_control="Moderate"):
     """Simulate yield prediction based on input parameters"""

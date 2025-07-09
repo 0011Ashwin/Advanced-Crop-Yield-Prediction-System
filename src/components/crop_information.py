@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 import os
 from PIL import Image
+import json
 
 from src.data import data_loader
 from src.visualizations import plots
@@ -186,7 +187,7 @@ def render_crop_information():
     st.subheader("Learn about different crops and global yield data")
     
     # Create tabs
-    tab1, tab2, tab3 = st.tabs(["Crop Encyclopedia", "Global Yield Data", "Crop Predictor"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Crop Encyclopedia", "Global Yield Data", "Crop Predictor", "Add New Crop Details"])
     
     with tab1:
         render_crop_encyclopedia()
@@ -196,29 +197,36 @@ def render_crop_information():
     
     with tab3:
         render_crop_predictor()
+    
+    with tab4:
+        render_add_crop_details()
 
 def render_crop_encyclopedia():
     """Render the crop encyclopedia section"""
     st.write("### Crop Encyclopedia")
     st.write("Explore detailed information about various crops.")
-    
-    # Create a dropdown to select a crop
-    crop_options = list(CROP_INFO.keys())
+
+    # --- Load crops from crop_info.json dynamically ---
+    crop_info_path = os.path.join("data", "crop_info.json")
+    if os.path.exists(crop_info_path):
+        with open(crop_info_path, "r") as f:
+            dynamic_crop_info = json.load(f)
+    else:
+        dynamic_crop_info = {}
+
+    crop_options = list(dynamic_crop_info.keys())
+    if not crop_options:
+        st.info("No crops available. Please add a crop.")
+        return
     selected_crop = st.selectbox("Select a crop", crop_options)
-    
+
     # Display crop information
-    if selected_crop in CROP_INFO:
-        crop_data = CROP_INFO[selected_crop]
-        
+    if selected_crop in dynamic_crop_info:
+        crop_data = dynamic_crop_info[selected_crop]
         col1, col2 = st.columns([1, 1])
-        
         with col1:
             # Check if local image exists first
-            local_image_path = os.path.join(CROP_IMAGES_PATH, f"{selected_crop}.jpg")
-            
-            # Alternative file extensions to check
             extensions = ['.jpg', '.jpeg', '.png', '.webp']
-            
             image_found = False
             for ext in extensions:
                 test_path = os.path.join(CROP_IMAGES_PATH, f"{selected_crop}{ext}")
@@ -226,70 +234,42 @@ def render_crop_encyclopedia():
                     local_image_path = test_path
                     image_found = True
                     break
-            
             if image_found:
-                # Use local image
                 try:
                     image = Image.open(local_image_path)
                     st.image(image, caption=selected_crop.capitalize(), use_column_width=True)
                 except Exception as e:
                     st.error(f"Error loading image: {e}")
-                    # Fallback to Unsplash image
-                    st.image(crop_data["image_url"], caption=selected_crop.capitalize(), use_column_width=True)
             else:
-                # Use Unsplash image as fallback
-                st.image(crop_data["image_url"], caption=selected_crop.capitalize(), use_column_width=True)
-                
-            # Add option to upload a new image
+                st.info("No image available for this crop.")
+            # Add option to upload a new image for existing crop
             st.write("#### Upload a custom image")
-            uploaded_file = st.file_uploader(f"Upload a new image for {selected_crop}", type=["jpg", "jpeg", "png", "webp"])
-            
+            uploaded_file = st.file_uploader(f"Upload a new image for {selected_crop}", type=["jpg", "jpeg", "png", "webp"], key=f"upload_{selected_crop}")
             if uploaded_file is not None:
-                # Save the uploaded image
                 try:
-                    # Determine file extension
                     file_ext = os.path.splitext(uploaded_file.name)[1].lower()
-                    if not file_ext:
-                        file_ext = ".jpg"  # Default extension
-                        
-                    # Ensure directory exists
                     os.makedirs(CROP_IMAGES_PATH, exist_ok=True)
-                    
-                    # Save path
                     save_path = os.path.join(CROP_IMAGES_PATH, f"{selected_crop}{file_ext}")
-                    
-                    # Save the file
                     with open(save_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
-                    
                     st.success(f"Image saved successfully at {save_path}")
-                    
-                    # Display the newly uploaded image
                     image = Image.open(save_path)
                     st.image(image, caption=f"New image for {selected_crop.capitalize()}", use_column_width=True)
                 except Exception as e:
                     st.error(f"Error saving image: {e}")
-        
         with col2:
             st.subheader(selected_crop.capitalize())
-            st.write(crop_data["description"])
-            
+            st.write(crop_data.get("description", "No description available."))
             st.write("**Growing Conditions:**")
-            st.write(crop_data["growing_conditions"])
-            
+            st.write(crop_data.get("growing_conditions", "N/A"))
             st.write("**Nutritional Value:**")
-            st.write(crop_data["nutritional_value"])
-            
+            st.write(crop_data.get("nutritional_value", "N/A"))
             st.write("**Typical Yield:**")
-            st.write(crop_data["typical_yield"])
-            
+            st.write(crop_data.get("typical_yield", "N/A"))
             st.write("**Major Producers:**")
-            for i, country in enumerate(crop_data["major_producers"], 1):
+            for i, country in enumerate(crop_data.get("major_producers", []), 1):
                 st.write(f"{i}. {country}")
-        
-        # Additional crop-specific information
         st.subheader(f"Best Practices for {selected_crop.capitalize()} Cultivation")
-        
         practices = {
             "Soil Preparation": "Prepare the soil by plowing and leveling. Ensure proper drainage.",
             "Sowing": f"Sow {selected_crop} seeds at the recommended spacing and depth based on variety.",
@@ -298,7 +278,6 @@ def render_crop_encyclopedia():
             "Pest & Disease Management": "Monitor regularly for pests and diseases. Use integrated pest management.",
             "Harvesting": "Harvest at proper maturity for maximum yield and quality."
         }
-        
         for practice, description in practices.items():
             st.write(f"**{practice}:** {description}")
 
@@ -557,6 +536,51 @@ def render_crop_predictor():
         except Exception as e:
             st.error(f"Error predicting crops: {e}")
             sample_recommendations()
+
+def render_add_crop_details():
+    """Render the add new crop details form as a separate tab."""
+    st.write("### Add a New Crop")
+    with st.form("add_crop_form"):
+        new_crop_name = st.text_input("Crop Name (lowercase, no spaces)")
+        new_crop_desc = st.text_area("Description")
+        new_crop_growing = st.text_area("Growing Conditions")
+        new_crop_nutrition = st.text_area("Nutritional Value")
+        new_crop_yield = st.text_input("Typical Yield")
+        new_crop_producers = st.text_area("Major Producers (comma separated)")
+        new_crop_image = st.file_uploader("Upload Crop Image", type=["jpg", "jpeg", "png", "webp"])
+        submit_crop = st.form_submit_button("Add Crop")
+
+        if submit_crop:
+            if not (new_crop_name and new_crop_desc and new_crop_growing and new_crop_nutrition and new_crop_yield and new_crop_producers and new_crop_image):
+                st.error("Please fill all fields and upload an image.")
+            else:
+                # Save image
+                ext = os.path.splitext(new_crop_image.name)[1].lower()
+                image_save_path = os.path.join(CROP_IMAGES_PATH, f"{new_crop_name}{ext}")
+                os.makedirs(CROP_IMAGES_PATH, exist_ok=True)
+                with open(image_save_path, "wb") as f:
+                    f.write(new_crop_image.getbuffer())
+
+                # Update crop_info.json
+                crop_info_path = os.path.join("data", "crop_info.json")
+                try:
+                    if os.path.exists(crop_info_path):
+                        with open(crop_info_path, "r") as f:
+                            crop_info = json.load(f)
+                    else:
+                        crop_info = {}
+                    crop_info[new_crop_name] = {
+                        "description": new_crop_desc,
+                        "growing_conditions": new_crop_growing,
+                        "nutritional_value": new_crop_nutrition,
+                        "typical_yield": new_crop_yield,
+                        "major_producers": [x.strip() for x in new_crop_producers.split(",") if x.strip()]
+                    }
+                    with open(crop_info_path, "w") as f:
+                        json.dump(crop_info, f, indent=4)
+                    st.success(f"Crop '{new_crop_name}' added successfully!")
+                except Exception as e:
+                    st.error(f"Error saving crop info: {e}")
 
 def sample_recommendations():
     """Display sample crop recommendations if real prediction isn't available"""

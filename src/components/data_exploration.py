@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 
 from src.data import data_loader
 from src.visualizations import plots
+from src.utils.reporting import get_csv_download, get_pdf_download
 
 def render_data_exploration():
     """Render the data exploration page"""
@@ -428,3 +429,7 @@ def render_data_exploration():
         file_name=f"{dataset.lower().replace(' ', '_')}.csv",
         mime="text/csv"
     ) 
+
+    if 'df' in locals() or 'df' in globals():
+        get_csv_download(df, filename="data_exploration.csv")
+        get_pdf_download(df.to_string(index=False), filename="data_exploration.pdf") 
