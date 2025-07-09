@@ -2,7 +2,7 @@
 
 An AI-powered agricultural platform for data analysis, crop yield prediction, and intelligent farming assistance.
 
-![Crop Yield Prediction](https://example.com/your-project-screenshot.png)
+![crop.jpg](crop.jpg)
 
 ## Overview
 
